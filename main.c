@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include "huffman.h"
 
+long long get_file_size(char *);
+
 int main(int argn, char *argv[]){
     if (argn != 4){
         fprintf(stderr, "Usage: %s [encode|decode] input output.\n", argv[0]);
@@ -79,6 +81,11 @@ int main(int argn, char *argv[]){
         free(codes);
         printf("Compressing completed successfully.\n");
 
+        long long before_comp = get_file_size(INPUT_FILE);
+        long long after_comp = get_file_size(OUTPUT_FILE);
+        printf("Size before compression (bytes): %lld\nSize after compression: %lld\n", before_comp, after_comp);
+        printf("Compression ratio: %lf\n", (double) before_comp/after_comp);
+
     } else if (strcmp(argv[1], "decode") == 0){
         // decoding regime
         printf("Decompressing '%s' to '%s'...\n", INPUT_FILE, OUTPUT_FILE);
@@ -97,9 +104,26 @@ int main(int argn, char *argv[]){
         destroy_tree(root);
         printf("Decompressing completed successfully.\n");
 
+        long long before_decomp = get_file_size(INPUT_FILE);
+        long long after_decomp = get_file_size(OUTPUT_FILE);
+        printf("Size before decompression (bytes): %lld\nSize after decompression: %lld\n", before_decomp, after_decomp);
+        printf("Compression ratio: %lf\n", (double) after_decomp/before_decomp);
+
     } else {
         fprintf(stderr, "Unknown mode: %s.\n", argv[1]);
         return 1;
     }
     return 0;
+}
+
+long long get_file_size(char *filepath){
+    if (!filepath) return -1;
+    if (access(filepath, F_OK | R_OK) != 0) return -1;
+    FILE *file = fopen(filepath, "rb");
+    if (!file) return -1;
+
+    fseek(file, 0, SEEK_END);
+    long long size = ftell(file);
+    fclose(file);    
+    return size;
 }
